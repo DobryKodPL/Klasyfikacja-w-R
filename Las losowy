@@ -1,0 +1,63 @@
+
+
+
+############# Wczytywanie danych#############
+df <- read.csv("C:/Users/lenovo/Desktop/Analiza danych - R/Titanic_train.csv",header=T,na.strings=c(""),as.is=T)
+head(df)
+
+############# Wybieranie kolumn#############
+data <- subset(df,select=c(2,3,5,6,7,8,10,12))
+head(data)
+
+############# Zastąpienie wartości ,,NA" średnimi#############
+data$Age[is.na(data$Age)] <- mean(data$Age,na.rm=T)
+
+############# Zamiana zamiennych na faktory#############
+data$Sex <-factor(data$Sex)
+data$Embarked <-factor(data$Embarked)
+is.factor(data$Sex)
+is.factor(data$Embarked)
+contrasts(data$Sex)
+contrasts(data$Embarked)
+
+############# Operacje na NA (usuwanie)#############
+data <- data[!is.na(data$Embarked),]
+rownames(data) <- NULL
+sapply(data, function(x) length(unique(x)))
+sapply(data,function(x) sum(is.na(x)))
+
+############# Instalacja pakietów oraz ich załadowanie#############
+install.packages("caTools")       # Podział danych
+install.packages("randomForest")  # Budowa lasu losowego
+library(caTools)
+library(randomForest)
+
+############# Podział danych#############
+split <- sample.split(data, SplitRatio = 0.7)
+split
+train <- subset(data, split == "TRUE")
+test <- subset(data, split == "FALSE")
+
+############# Budowa modelu#############
+set.seed(120)  # Setting seed
+class(train$Survived)
+train$Survived <- as.factor(train$Survived)
+class(train$Survived)
+classifier_RF = randomForest(x = train[-1],
+                             y = train$Survived,
+                             ntree = 3)
+classifier_RF
+
+############# Predykcja testowa#############
+y_pred = predict(classifier_RF, newdata = test[-1])
+
+#############  Confusion Matrix#############
+confusion_mtx = table(test[, 1], y_pred)
+confusion_mtx
+confusionMatrix(confusion_mtx)
+
+#############  Dane ważności cech#############
+importance(classifier_RF)
+
+#############  WWykres ważności cech#############
+varImpPlot(classifier_RF)
