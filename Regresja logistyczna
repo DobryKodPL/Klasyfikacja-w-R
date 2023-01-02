@@ -1,0 +1,45 @@
+############# Wczytywanie danych#############
+
+df <- read.csv("C:/Users/lenovo/Desktop/Analiza danych - R/Titanic_train.csv",header=T,na.strings=c(""),as.is=T)
+head(df)
+
+############# Wybieranie kolumn#############
+data <- subset(df,select=c(2,3,5,6,7,8,10,12))
+head(data)
+
+############# Operacje na NA (zastępowanie średnią)#############
+data$Age[is.na(data$Age)] <- mean(data$Age,na.rm=T)
+
+############# Zamiana zamiennych na faktory#############
+data$Sex <-factor(data$Sex)
+data$Embarked <-factor(data$Embarked)
+is.factor(data$Sex)
+is.factor(data$Embarked)
+contrasts(data$Sex)
+contrasts(data$Embarked)
+
+############# Operacje na NA (usuwanie)#############
+data <- data[!is.na(data$Embarked),]
+rownames(data) <- NULL
+sapply(data, function(x) length(unique(x)))
+sapply(data,function(x) sum(is.na(x)))
+
+############# TEST I TRENING#############
+train <- data[1:800,]
+test <- data[801:889,]
+
+############# Modelowanie#############
+model <- glm(Survived ~.,family=binomial(link='logit'),data=train)
+summary(model)
+
+##############Predykcja#############
+y_pred = predict(model, newdata = test,type="response")
+y_pred
+y_pred <- ifelse(y_pred >= 0.5, 1, 0)
+y_pred
+
+#############Macierz pomyłek#############
+library(caret)
+conf_mat <- table(test$Survived,y_pred,dnn = c("Truth", "Predicted")) 
+conf_mat
+confusionMatrix(conf_mat) 
