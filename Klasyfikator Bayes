@@ -1,0 +1,49 @@
+
+############# Załadowanie pakietów#############
+library(e1071) 
+library(caTools) 
+library(caret)  
+
+############# Wczytywanie danych#############
+df <- read.csv("C:/Users/lenovo/Desktop/Analiza danych - R/Titanic_train.csv",header=T,na.strings=c(""),as.is=T)
+head(df)
+
+
+############# Wybieranie kolumn#############
+data <- subset(df,select=c(2,3,5,6,7,8,10,12))
+head(data)
+
+############# Operacje na NA (zastępowanie średnią)#############
+data$Age[is.na(data$Age)] <- mean(data$Age,na.rm=T)
+
+############# Zamiana zamiennych na faktory#############
+data$Sex <-factor(data$Sex)
+data$Embarked <-factor(data$Embarked)
+is.factor(data$Sex)
+is.factor(data$Embarked)
+contrasts(data$Sex)
+contrasts(data$Embarked)
+
+############# Operacje na NA (usuwanie)#############
+data <- data[!is.na(data$Embarked),]
+rownames(data) <- NULL
+sapply(data, function(x) length(unique(x)))
+sapply(data,function(x) sum(is.na(x)))
+
+############# TEST I TRENING#############
+train <- data[1:800,]
+test <- data[801:889,]
+
+############# Modelowanie#############
+set.seed(1)  # Setting Seed 
+classifier_naive <- naiveBayes(Survived~ ., data = train) 
+classifier_naive 
+summary(classifier_naive)
+y_pred <- predict(classifier_naive, newdata = test) 
+y_pred
+
+############# Confusion Matrix#############
+library(caret)
+confusion_mtx = table(test[, 1], y_pred)
+confusion_mtx
+confusionMatrix(confusion_mtx) 
